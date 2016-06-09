@@ -5,3 +5,5 @@ minecraft/
 classes/
 build/
 libs/
+
+!resources/assets/sanplayermodel/textures/entity/player/minecraft/
