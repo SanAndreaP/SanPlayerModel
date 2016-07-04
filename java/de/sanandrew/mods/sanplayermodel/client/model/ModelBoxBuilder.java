@@ -8,8 +8,6 @@
  */
 package de.sanandrew.mods.sanplayermodel.client.model;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelRenderer;
 
@@ -19,7 +17,6 @@ import java.lang.reflect.InvocationTargetException;
  * A builder class to easily instantiate a ModelRenderer box for a Model without having to deal with multi-line method calls and field assignments.
  * Method cascading FTW \o/
  */
-@SideOnly( Side.CLIENT )
 public final class ModelBoxBuilder<T extends ModelRenderer>
 {
     /**

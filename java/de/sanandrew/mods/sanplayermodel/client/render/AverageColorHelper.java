@@ -7,8 +7,6 @@
  * *****************************************************************************************************************
  */
 package de.sanandrew.mods.sanplayermodel.client.render;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 import net.darkhax.bookshelf.lib.ColorObject;
 
 import javax.imageio.ImageIO;
@@ -16,7 +14,6 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 
-@SideOnly( Side.CLIENT )
 public final class AverageColorHelper
 {
     /**

@@ -7,26 +7,25 @@
 package de.sanandrew.mods.sanplayermodel.client.event;
 
 import com.mojang.authlib.GameProfile;
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 import de.sanandrew.mods.sanplayermodel.client.render.RenderSanPlayer;
-import net.darkhax.bookshelf.lib.util.ReflectionUtils;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.renderer.EntityRenderer;
+import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.client.resources.SimpleReloadableResourceManager;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.client.event.RenderHandEvent;
 import net.minecraftforge.client.event.RenderLivingEvent.Pre;
 import net.minecraftforge.client.event.RenderPlayerEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import org.lwjgl.opengl.GL11;
 
 import java.util.UUID;
 import java.util.regex.Pattern;
 
-@SideOnly( Side.CLIENT )
 public class RenderPlayerEventHandler
 {
     private static final Pattern UUID_PTRN = Pattern.compile("[a-f0-9]{8}\\-[a-f0-9]{4}\\-4[a-f0-9]{3}\\-[89ab][a-f0-9]{3}\\-[a-f0-9]{12}", Pattern.CASE_INSENSITIVE);
@@ -42,8 +41,7 @@ public class RenderPlayerEventHandler
 
     private void lazyLoad() {
         if( this.sanPlayerModel == null ) {
-            this.sanPlayerModel = new RenderSanPlayer();
-            this.sanPlayerModel.setRenderManager(RenderManager.instance);
+            this.sanPlayerModel = new RenderSanPlayer(Minecraft.getMinecraft().getRenderManager());
 
             if( Minecraft.getMinecraft().getResourceManager() instanceof SimpleReloadableResourceManager ) {
                 ((SimpleReloadableResourceManager) Minecraft.getMinecraft().getResourceManager()).registerReloadListener(this.sanPlayerModel);
@@ -55,8 +53,8 @@ public class RenderPlayerEventHandler
     public void onPlayerRender(RenderPlayerEvent.Pre event) {
         this.lazyLoad();
 
-        if( isPlayerNameOrUuidEqual(event.entityPlayer, SANPLAYER_NAMES_UUID) ) {
-            playerPartTicks = event.partialRenderTick;
+        if( isPlayerNameOrUuidEqual(event.getEntityPlayer(), SANPLAYER_NAMES_UUID) ) {
+            playerPartTicks = event.getPartialRenderTick();
         }
     }
 
@@ -64,8 +62,8 @@ public class RenderPlayerEventHandler
     public void onLivingRender(Pre event) {
         this.lazyLoad();
 
-        if( event.entity instanceof EntityPlayer && event.renderer != this.sanPlayerModel && isPlayerNameOrUuidEqual((EntityPlayer) event.entity, SANPLAYER_NAMES_UUID) ) {
-            this.sanPlayerModel.doRender(event.entity, event.x, event.y + event.entity.yOffset, event.z, 0.0F, this.playerPartTicks);
+        if( event.getEntity() instanceof EntityPlayer && event.getRenderer() != this.sanPlayerModel && isPlayerNameOrUuidEqual((EntityPlayer) event.getEntity(), SANPLAYER_NAMES_UUID) ) {
+            this.sanPlayerModel.doRender((AbstractClientPlayer) event.getEntity(), event.getX(), event.getY() + ((EntityPlayer) event.getEntity()).renderOffsetY, event.getZ(), 0.0F, this.playerPartTicks);
             event.setCanceled(true);
         }
     }
@@ -78,14 +76,24 @@ public class RenderPlayerEventHandler
         GL11.glPushMatrix();
         Minecraft mc = Minecraft.getMinecraft();
 
-        if( isPlayerNameOrUuidEqual(mc.thePlayer, SANPLAYER_NAMES_UUID) ) {
-            event.setCanceled(true);
-            GL11.glClear(GL11.GL_DEPTH_BUFFER_BIT);
-            RenderPlayer rend = (RenderPlayer) RenderManager.instance.getEntityRenderObject(mc.thePlayer);
-            RenderManager.instance.entityRenderMap.put(mc.thePlayer.getClass(), this.sanPlayerModel);
-            ReflectionUtils.invokeCachedMethod(EntityRenderer.class, mc.entityRenderer, RENDER_HAND_MCP, RENDER_HAND_SRG,
-                                                   new Class[] { float.class, int.class }, new Object[] { event.partialTicks, event.renderPass } );
-            RenderManager.instance.entityRenderMap.put(mc.thePlayer.getClass(), rend);
+        boolean flag = mc.getRenderViewEntity() instanceof EntityLivingBase && ((EntityLivingBase)mc.getRenderViewEntity()).isPlayerSleeping();
+        if( mc.gameSettings.thirdPersonView == 0 && !flag && !mc.gameSettings.hideGUI && mc.playerController != null && !mc.playerController.isSpectator() ) {
+            if( isPlayerNameOrUuidEqual(mc.thePlayer, SANPLAYER_NAMES_UUID) ) {
+                String skinType = mc.thePlayer.getSkinType();
+                Render<AbstractClientPlayer> rend = mc.getRenderManager().getEntityRenderObject((AbstractClientPlayer) mc.thePlayer);
+                RenderPlayer skin = mc.getRenderManager().getSkinMap().get(skinType);
+
+                mc.getRenderManager().entityRenderMap.put(mc.thePlayer.getClass(), this.sanPlayerModel);
+                mc.getRenderManager().skinMap.put(skinType, this.sanPlayerModel);
+
+                event.setCanceled(true);
+                mc.entityRenderer.enableLightmap();
+                mc.entityRenderer.itemRenderer.renderItemInFirstPerson(event.getPartialTicks());
+                mc.entityRenderer.disableLightmap();
+
+                mc.getRenderManager().entityRenderMap.put(mc.thePlayer.getClass(), rend);
+                mc.getRenderManager().skinMap.put(skinType, skin);
+            }
         }
 
         GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);

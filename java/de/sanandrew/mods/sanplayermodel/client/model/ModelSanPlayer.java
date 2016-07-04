@@ -6,9 +6,8 @@
  *******************************************************************************************************************/
 package de.sanandrew.mods.sanplayermodel.client.model;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.model.ModelBiped;
+import net.minecraft.client.model.ModelPlayer;
 import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.entity.Entity;
 import org.lwjgl.opengl.GL11;
@@ -16,9 +15,8 @@ import org.lwjgl.opengl.GL11;
 /**
  * Created using Tabula 4.1.1
  */
-@SideOnly( Side.CLIENT )
 public class ModelSanPlayer
-        extends ModelBiped
+        extends ModelPlayer
 {
     public ModelRenderer legLeft;
     public ModelRenderer legRight;
@@ -41,7 +39,7 @@ public class ModelSanPlayer
     private boolean isArmor;
 
     public ModelSanPlayer(float scaling, boolean isArmor) {
-        super(scaling);
+        super(scaling, isArmor);
         this.isArmor = isArmor;
 
         this.textureWidth = 64;

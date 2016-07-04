@@ -6,7 +6,6 @@
  *******************************************************************************************************************/
 package de.sanandrew.mods.sanplayermodel.client;
 
-import cpw.mods.fml.common.FMLCommonHandler;
 import de.sanandrew.mods.sanplayermodel.CommonProxy;
 import de.sanandrew.mods.sanplayermodel.client.event.RenderPlayerEventHandler;
 import net.minecraftforge.common.MinecraftForge;
